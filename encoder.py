@@ -20,7 +20,7 @@ class Encoder(nn.Module):
         self.batch_size = batch_size
         
         self.embedding = nn.Embedding(vocab_size,embed_size)
-        self.gru = nn.GRU(embed_size, hidden_size, num_layers=num_layers, batch_first=True,bidirectional=True)
+        self.gru = nn.GRU(embed_size, hidden_size, num_layers=num_layers, batch_first=True,bidirectional=True,dropout=0.2)
         self.lstm = nn.LSTM(embed_size, hidden_size, num_layers=num_layers, batch_first=True)
 
 
@@ -40,8 +40,8 @@ class Encoder(nn.Module):
 
         self.tanh = nn.Tanh()
 
-        self.gated_attention_rnn = nn.GRU(hidden_size*3, hidden_size, num_layers=1, batch_first=True, bidirectional=True) # bidirectional input + c_t of 75 size = 150+75 = 225
-        self.gated_attention_self_matching_rnn = nn.GRU(hidden_size*3, hidden_size, num_layers=1, batch_first=True,bidirectional=True) # passage word size + c_t = 55 + 75 = 150 
+        self.gated_attention_rnn = nn.GRU(hidden_size*3, hidden_size, num_layers=1, batch_first=True, bidirectional=True,dropout=0.2) # bidirectional input + c_t of 75 size = 150+75 = 225
+        self.gated_attention_self_matching_rnn = nn.GRU(hidden_size*3, hidden_size, num_layers=1, batch_first=True,bidirectional=True,dropout=0.2) # passage word size + c_t = 55 + 75 = 150 
         
         self.answer_recurrent_network = nn.GRU(hidden_size, hidden_size, num_layers=1, batch_first=True) 
 
@@ -115,7 +115,7 @@ class Encoder(nn.Module):
         a = F.sigmoid(self.linear_vt_answer_rec(self.tanh(h_p + h_a)))
 
         a_t = a.squeeze(2) #1, x
-        pointer = torch.topk(a_t,1)[1].squeeze(0)
+        pointer = a_t
         c_t = torch.sum(a*h_p,dim=1).unsqueeze(0) # 1,1,75
         x , self.hidden_ans_recurrent_pointer_network = self.answer_recurrent_network(c_t,self.hidden_ans_recurrent_pointer_network)
         
