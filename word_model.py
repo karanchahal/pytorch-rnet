@@ -100,6 +100,7 @@ class WordModel:
     def parse(self,caption,qa=False):
         tokenizer = MosesTokenizer()
         tokens = tokenizer.tokenize(caption)
+        
         ids = []
         if qa:
             ids.append(self.vocab.idx('<SOS>'))
@@ -112,6 +113,29 @@ class WordModel:
             ids.append(self.vocab.idx('<EOS>'))
         ids = self.tensor(ids)
         return ids
+    def get_target_ids(self,context,context_ids,start,end):
+        
+        answer = context[start:end]
+        answer_ids = self.parse(answer)
+        # print(answer)
+        for j,_ in enumerate(context_ids):
+            
+            flag = 0
+            for k,_ in enumerate(answer_ids):
+                a_id = answer_ids[k]
+                c_id = context_ids[j+k]
+
+                if(a_id != c_id):
+                    flag = 1
+                    break
+
+            if flag ==0:
+                # print(self.vocab.word(context_ids[j]))
+                # print(self.vocab.word(context_ids[j+len(answer_ids) - 1]))
+                return j,j+len(answer_ids) - 1
+        
+        return -1,-1
+            
 
     def captionloader(self,captions):
         num_examples = []
