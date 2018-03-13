@@ -6,6 +6,12 @@ from encoder import Encoder
 from torch.autograd import Variable
 import torch
 import torch.nn as nn
+import nltk
+
+
+nltk.download('perluniprops')
+nltk.download('nonbreaking_prefixes')
+
 
 # Create a logger object.
 logger = logging.getLogger(__name__)
