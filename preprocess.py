@@ -20,7 +20,7 @@ logger.warning('Loading Vocab ...')
 word_model.load_vocab()
 vocab_size = word_model.vocab.length()
 encoder = Encoder(vocab_size=vocab_size)
-optimiser = torch.optim.SGD(encoder.parameters(), lr=0.01)
+optimiser = torch.optim.SGD(encoder.parameters(), lr=0.0001)
 criterion = nn.CrossEntropyLoss()
 
 def train_model(context,question,answer,target_start,target_end):
