@@ -6,6 +6,7 @@ from encoder import Encoder
 from torch.autograd import Variable
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 # Create a logger object.
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ word_model.load_vocab()
 vocab_size = word_model.vocab.length()
 encoder = Encoder(vocab_size=vocab_size)
 optimiser = torch.optim.SGD(encoder.parameters(), lr=0.0001)
-criterion = nn.CrossEntropyLoss()
+criterion = nn.NLLLoss()
 
 def train_model(context,question,answer,target_start,target_end):
     context,question,answer = Variable(context),Variable(question),Variable(answer)
@@ -41,10 +42,10 @@ def train_model(context,question,answer,target_start,target_end):
     loss1 = criterion(s,target_start)
     loss2  = criterion(e,target_end)
 
-    # loss = loss1 + loss2 # ?? what needs to be done to minimise loss 
+    loss = loss1 + loss2 # ?? what needs to be done to minimise loss 
 
-    print(loss1.data[0])
-    loss1.backward()
+    print(loss.data[0])
+    loss.backward()
     optimiser.step()
 
 for input in dataset['data']:
@@ -59,7 +60,7 @@ for input in dataset['data']:
             question_ids = word_model.parse(question,qa=True)
 
             answers = qa['answers']
-            while(True):
+            while True:
                 for ans in answers:
                     ans_start = ans['answer_start']
                     ans_text = ans['text']
@@ -74,6 +75,6 @@ for input in dataset['data']:
                         train_model(context_ids,question_ids,ans_ids,target_start,target_end)
 
                 #     break
-            # break 
+                # break 
         break
     break

@@ -66,7 +66,7 @@ class Encoder(nn.Module):
         p = self.linear_passage(passage_word)
         q = self.linear_question(question)
 
-        a_t = F.sigmoid(self.linear_vt(self.tanh(q + h + p))) # stj = vt*tanh(question, passage_word, last_hidden_layer) ; a_t = sigmoid(s_t)
+        a_t = F.softmax(self.linear_vt(self.tanh(q + h + p))) # stj = vt*tanh(question, passage_word, last_hidden_layer) ; a_t = sigmoid(s_t)
         c_t = torch.sum(a_t*q,dim=1) # 1,75
         
 
@@ -91,7 +91,7 @@ class Encoder(nn.Module):
         p = self.linear_self_passage(passage)
         inp = p + p_w
 
-        a_t = F.sigmoid(self.linear_vt(self.tanh(p + p_w))) # stj = vt*tanh(passage,passage_word) ; a_t = sigmoid(s_t)
+        a_t = F.softmax(self.linear_vt(self.tanh(p + p_w))) # stj = vt*tanh(passage,passage_word) ; a_t = sigmoid(s_t)
         c_t = torch.sum(a_t*p,dim=1)
         
         final_inp = torch.cat((passage_word,c_t),dim=1)
@@ -112,10 +112,11 @@ class Encoder(nn.Module):
         h_p = self.linear_h_p(h_p)
         h_a = self.linear_h_a(hidden_layer)
         
-        a = F.sigmoid(self.linear_vt_answer_rec(self.tanh(h_p + h_a)))
-
+        a = self.linear_vt_answer_rec(self.tanh(h_p + h_a))
+        
         a_t = a.squeeze(2) #1, x
-        pointer = a_t
+
+        pointer = F.log_softmax(a_t)
         c_t = torch.sum(a*h_p,dim=1).unsqueeze(0) # 1,1,75
         x , self.hidden_ans_recurrent_pointer_network = self.answer_recurrent_network(c_t,self.hidden_ans_recurrent_pointer_network)
         
@@ -170,7 +171,6 @@ class Encoder(nn.Module):
         
         v = self.build_question_aware_passage(u_p,u_q)
         h = self.build_self_matching_attention(v,v)
-        #print(h.size())
 
         # print(h.size()) # batch size, num words in passage , hidden vector size (1, 149, 75)
         start_index = self.pointer_network(h)
